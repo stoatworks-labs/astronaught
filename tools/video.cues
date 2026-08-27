@@ -1,0 +1,106 @@
+# The project video, as a cue sheet.
+#
+# Every frame is the real plugin rendering through the real FFGL sequence. This
+# is the effect being OPERATED, not a mock-up. Render with:
+#
+#   ffmpeg -i source.mp4 -f rawvideo -pix_fmt rgba - \
+#     | ./build/astest --pipe --size 1920x1080 --fps 30 --script tools/video.cues \
+#     | ffmpeg -f rawvideo -pix_fmt rgba -s 1920x1080 -r 30 -i - out.mp4
+#
+# Syntax: `frame  Parameter Name  value`, ramped between keys.
+#
+# ⚠️ Mode and Preset are OPTION parameters and must STEP -- two keys one frame
+# apart. Ramping Mode sweeps through every selector position on the way, which
+# looks like a fault rather than a choice.
+#
+# 30 fps, so frame = seconds * 30. The order of the piece is the order of the
+# README: what it is, then the one idea, then what the idea buys.
+
+# ------------------------------------------------------- 0s: the picture, clean
+0    Mix           0.0
+0    Mode          0
+0    Repeat Rate   0.55
+0    Intensity     0.0
+0    Head Spread   0.602
+0    Input Level   0.5
+0    Saturation    0.30
+0    Head Wear     0.22
+0    Hiss          0.15
+0    Dropouts      0.0
+0    Wow & Flutter 0.30
+0    Wow           0.45
+0    Flutter       0.40
+0    Scrape        0.20
+0    Reverb Time   0.45
+0    Dispersion    0.5
+0    Echo Volume   0.0
+0    Reverb Volume 0.0
+0    Direct Volume 1.0
+0    Bass          0.5
+0    Treble        0.5
+
+# Two seconds of the untouched picture, so there is a before.
+60   Mix           0.0
+75   Mix           1.0
+
+# --------------------------------------------- 2.5s: one head, and it arrives
+# Echo Volume up rather than Mix, so what fades in is the TAPE and not the
+# effect -- the direct signal never moves.
+75    Echo Volume  0.0
+150   Echo Volume  0.85
+
+# ------------------------------------------ 6s: Intensity, so it repeats
+180   Intensity    0.0
+300   Intensity    0.55
+
+# ------------------------------------- 11s: the Mode Selector, stepping
+# Each position held for a second and a half. STEPPED, never ramped.
+330   Mode  0
+331   Mode  1
+375   Mode  1
+376   Mode  2
+420   Mode  2
+421   Mode  3
+
+# ------------------------------- 15.5s: THE ONE IDEA -- Repeat Rate drags
+# The signature move, and the reason this is not a frame delay. Slow, so the
+# echoes already on the tape can be seen sliding and re-pitching on the way.
+465   Repeat Rate  0.55
+540   Repeat Rate  0.88
+660   Repeat Rate  0.18
+780   Repeat Rate  0.55
+
+# --------------------------------- 26s: Intensity toward self-oscillation
+780   Intensity    0.55
+900   Intensity    0.92
+960   Intensity    0.92
+1020  Intensity    0.50
+
+# ------------------------------- 34s: Head Spread -- the heads come apart
+# Something the hardware could only do with a screwdriver. The tears get large
+# and the 1:2:3 rhythm stretches out with them.
+1020  Head Spread  0.602
+1140  Head Spread  0.90
+1200  Head Spread  0.602
+
+# --------------------------------- 40s: the transport comes apart
+1200  Wow & Flutter 0.30
+1260  Wow & Flutter 0.85
+1260  Head Wear     0.22
+1320  Head Wear     0.70
+1320  Dropouts      0.0
+1350  Dropouts      0.45
+
+# ----------------------------- 45s: the tank, and out on all three heads
+1350  Mode  3
+1351  Mode  10
+1350  Reverb Volume 0.0
+1410  Reverb Volume 0.75
+1380  Wow & Flutter 0.85
+1440  Wow & Flutter 0.35
+1380  Head Wear     0.70
+1440  Head Wear     0.25
+1380  Dropouts      0.45
+1440  Dropouts      0.0
+1440  Intensity     0.50
+1530  Intensity     0.62
