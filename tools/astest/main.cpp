@@ -47,6 +47,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <chrono>
 #include <cstring>
 #include <map>
 #include <string>
@@ -1434,6 +1435,67 @@ int statsOf( int width, int height, int frames, double fps,
 	return 0;
 }
 
+/// Render cost, per frame, with the whole machine running.
+///
+/// ⚠️ Measured with `glFinish()` around each frame, not by timing the calls.
+/// GL is asynchronous: without it this measures how fast the driver can accept
+/// commands, which on a modern driver is roughly constant and roughly a lie.
+///
+/// The first frames are excluded. This plugin allocates a large texture array
+/// on its first frame and compiles four programs before that, so an average
+/// that includes them reports the cost of starting up rather than the cost of
+/// running.
+int benchmark( int width, int height, int frames, int preset )
+{
+	Driver driver;
+	const auto names = parameterIndex( driver.plugin );
+	if( preset > 0 )
+		driver.plugin.SetFloatParameter( names.at( "Preset" ), static_cast< float >( preset ) );
+
+	Target target = makeTarget( width, height );
+
+	const std::vector< unsigned char > card = testCard( width, height, 0 );
+	const GLuint input = uploadTexture( card, width, height );
+
+	const int warmup = 20;
+	double best = 1e9, total = 0.0;
+	int counted = 0;
+
+	for( int i = 0; i < frames + warmup; ++i )
+	{
+		driver.plugin.SetTime( i / 60.0 );
+
+		const auto t0 = std::chrono::steady_clock::now();
+		const bool ok = driver.render( target, input, width, height );
+		glFinish();
+		const auto t1 = std::chrono::steady_clock::now();
+
+		if( !ok )
+		{
+			std::printf( "the plugin would not render\n" );
+			glDeleteTextures( 1, &input );
+			releaseTarget( target );
+			return 1;
+		}
+
+		if( i < warmup )
+			continue;
+
+		const double ms = std::chrono::duration< double, std::milli >( t1 - t0 ).count();
+		best = std::min( best, ms );
+		total += ms;
+		++counted;
+	}
+
+	std::printf( "%dx%d  %.3f ms/frame mean, %.3f ms best  (%.0f fps at the mean, tape %dx%d, stride %d)\n",
+	             width, height, total / counted, best, 1000.0 * counted / total,
+	             driver.plugin.tapeWidth(), driver.plugin.tapeHeight(), driver.plugin.stride() );
+
+	glDeleteTextures( 1, &input );
+	releaseTarget( target );
+	return 0;
+}
+
 void usage()
 {
 	std::printf(
@@ -1455,6 +1517,7 @@ void usage()
 	    "\n"
 	    "  --out PATH             render a frame\n"
 	    "  --stats                render, and report mean / sd / blown-out\n"
+	    "  --bench                render cost per frame, with glFinish\n"
 	    "  --size WxH             render size (default 640x360)\n"
 	    "  --frames N             frames to run before the one that is kept\n"
 	    "  --fps N                frame rate to run them at\n"
@@ -1478,6 +1541,7 @@ int main( int argc, char** argv )
 	double fps = 60.0;
 	int preset     = 0;
 	bool wantStats = false;
+	bool wantBench = false;
 	std::vector< std::pair< std::string, float > > sets;
 	std::vector< std::string > checks;
 	bool wantList = false;
@@ -1517,6 +1581,8 @@ int main( int argc, char** argv )
 			wantList = true;
 		else if( arg == "--stats" )
 			wantStats = true;
+		else if( arg == "--bench" )
+			wantBench = true;
 		else if( arg == "--all" )
 			checks = { "modes", "ratios", "delay", "rate",     "drag", "chorus",
 				       "names", "read",   "identity", "presets", "guard" };
@@ -1555,7 +1621,7 @@ int main( int argc, char** argv )
 			needGL.push_back( c );
 	}
 
-	if( !needGL.empty() || !outPath.empty() || wantStats )
+	if( !needGL.empty() || !outPath.empty() || wantStats || wantBench )
 	{
 		CGLContextObj context = createContext();
 		if( context == nullptr )
@@ -1585,7 +1651,9 @@ int main( int argc, char** argv )
 		}
 
 		int rc = 0;
-		if( wantStats )
+		if( wantBench )
+			rc = benchmark( width, height, frames, preset );
+		if( rc == 0 && wantStats )
 			rc = statsOf( width, height, frames, fps, sets, preset );
 		if( rc == 0 && !outPath.empty() )
 			rc = renderFrame( outPath, width, height, frames, fps, sets, preset );

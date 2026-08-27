@@ -190,6 +190,17 @@ public:
 		return span;
 	}
 
+	/// The tape's own resolution, which is NOT the composition's -- the store is
+	/// scaled to fit a byte budget. See Store.h.
+	int tapeWidth() const
+	{
+		return store.Width();
+	}
+	int tapeHeight() const
+	{
+		return store.Height();
+	}
+
 private:
 	/// The ParamID each presets::Param drives, in presets::Param order. The
 	/// preset table stays host-agnostic; this is the binding of it.
