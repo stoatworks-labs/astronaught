@@ -22,6 +22,8 @@ The picture is the signal on the tape.
 
 An FFGL effect for **Resolume Arena and Avenue**.
 
+**Video:** [What it does, in 50 seconds](https://www.youtube.com/watch?v=gKclEJn55sk)
+
 ![Three heads, on real footage](docs/hero.png)
 
 *Selector position 11 — all three heads and the spring tank — on a clip of
