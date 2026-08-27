@@ -22,6 +22,13 @@ The picture is the signal on the tape.
 
 An FFGL effect for **Resolume Arena and Avenue**.
 
+![Three heads, on real footage](docs/hero.png)
+
+*Selector position 11 — all three heads and the spring tank — on a clip of
+Resolume's own demo footage. The figure is on the tape three times at 1 : 2 : 3,
+each pass a further generation. Rendered by the plugin's own offline harness
+putting real frames through the real shipped shaders, not a screen capture.*
+
 ## What makes it a tape echo and not a frame delay
 
 ☠️ **The tape is indexed by position, never by time.**

@@ -1496,6 +1496,197 @@ int benchmark( int width, int height, int frames, int preset )
 	return 0;
 }
 
+//---------------------------------------------------------------------------
+// Real footage through the real shaders.
+//
+//   ffmpeg -i in.mov -f rawvideo -pix_fmt rgba - \
+//     | astest --pipe --size 1920x1080 --fps 30 --script cues.txt \
+//     | ffmpeg -f rawvideo -pix_fmt rgba -s 1920x1080 -r 30 -i - out.mov
+//
+// This exists so the project video and the hero shot are the SHIPPED plugin
+// acting on real frames, rather than a screen capture of a host or a synthetic
+// card. Everything a viewer sees was rendered by the same class Resolume loads.
+//
+// ⚠️ Frames arrive TOP-DOWN from ffmpeg and GL wants bottom-up, so the upload
+// flips and the readback flips again. Getting that wrong does not look like a
+// flip -- the picture comes out upright either way because it is flipped twice
+// -- it makes `scan` run backwards, and the tear rolls the opposite way from
+// the way it does in Resolume. See uploadTexture.
+//---------------------------------------------------------------------------
+
+/// One key in a cue sheet.
+struct Cue
+{
+	int frame;
+	std::string name;
+	float value;
+};
+
+/// Read `frame  Parameter Name  value` lines. Blank lines and `#` are ignored.
+///
+/// ⚠️ Option and boolean parameters must STEP, never ramp: two keys one frame
+/// apart. A ramped Mode sweeps through every selector position on the way,
+/// which is not what anybody writing the cue meant and looks like a fault.
+std::vector< Cue > readCues( const std::string& path )
+{
+	std::vector< Cue > cues;
+	FILE* f = std::fopen( path.c_str(), "r" );
+	if( f == nullptr )
+	{
+		std::fprintf( stderr, "astest: cannot open cue sheet '%s'\n", path.c_str() );
+		return cues;
+	}
+
+	char line[ 512 ];
+	while( std::fgets( line, sizeof( line ), f ) != nullptr )
+	{
+		char* p = line;
+		while( *p == ' ' || *p == '\t' )
+			++p;
+		if( *p == '#' || *p == '\n' || *p == '\0' )
+			continue;
+
+		int frame = 0;
+		int used  = 0;
+		if( std::sscanf( p, "%d %n", &frame, &used ) != 1 )
+			continue;
+		p += used;
+
+		// The name runs to the last whitespace-separated field, which is the
+		// value -- names contain spaces, so splitting on whitespace from the
+		// left loses every multi-word control.
+		std::string rest( p );
+		while( !rest.empty() && ( rest.back() == '\n' || rest.back() == '\r' || rest.back() == ' ' ) )
+			rest.pop_back();
+
+		const size_t space = rest.find_last_of( " \t" );
+		if( space == std::string::npos )
+			continue;
+
+		Cue cue;
+		cue.frame = frame;
+		cue.name  = rest.substr( 0, space );
+		cue.value = static_cast< float >( std::atof( rest.c_str() + space + 1 ) );
+		while( !cue.name.empty() && ( cue.name.back() == ' ' || cue.name.back() == '\t' ) )
+			cue.name.pop_back();
+
+		cues.push_back( cue );
+	}
+
+	std::fclose( f );
+	return cues;
+}
+
+/// The value a cued parameter should hold at `frame`, ramped between keys.
+float cueValueAt( const std::vector< Cue >& cues, const std::string& name, int frame, float fallback )
+{
+	const Cue* before = nullptr;
+	const Cue* after  = nullptr;
+
+	for( const Cue& c : cues )
+	{
+		if( c.name != name )
+			continue;
+		if( c.frame <= frame && ( before == nullptr || c.frame >= before->frame ) )
+			before = &c;
+		if( c.frame > frame && ( after == nullptr || c.frame < after->frame ) )
+			after = &c;
+	}
+
+	if( before == nullptr )
+		return after != nullptr ? after->value : fallback;
+	if( after == nullptr || after->frame == before->frame )
+		return before->value;
+
+	const float t = static_cast< float >( frame - before->frame )
+	                / static_cast< float >( after->frame - before->frame );
+	return before->value + ( after->value - before->value ) * t;
+}
+
+int pipeFrames( int width, int height, double fps, const std::string& scriptPath,
+                const std::vector< std::pair< std::string, float > >& sets, int preset )
+{
+	Driver driver;
+	const auto names = parameterIndex( driver.plugin );
+
+	if( preset > 0 )
+		driver.plugin.SetFloatParameter( names.at( "Preset" ), static_cast< float >( preset ) );
+
+	for( const auto& kv : sets )
+	{
+		const auto it = names.find( kv.first );
+		if( it == names.end() )
+		{
+			std::fprintf( stderr, "astest: no parameter called '%s'\n", kv.first.c_str() );
+			return 1;
+		}
+		driver.plugin.SetFloatParameter( it->second, kv.second );
+	}
+
+	std::vector< Cue > cues;
+	std::vector< std::string > cued;
+	if( !scriptPath.empty() )
+	{
+		cues = readCues( scriptPath );
+		for( const Cue& c : cues )
+		{
+			if( std::find( cued.begin(), cued.end(), c.name ) == cued.end() )
+			{
+				if( names.find( c.name ) == names.end() )
+				{
+					std::fprintf( stderr, "astest: no parameter called '%s'\n", c.name.c_str() );
+					return 1;
+				}
+				cued.push_back( c.name );
+			}
+		}
+		std::fprintf( stderr, "astest: %zu cues over %zu parameters\n", cues.size(), cued.size() );
+	}
+
+	Target target = makeTarget( width, height );
+
+	const size_t frameBytes = static_cast< size_t >( width ) * height * 4;
+	std::vector< unsigned char > in( frameBytes );
+
+	int frame = 0;
+	while( std::fread( in.data(), 1, frameBytes, stdin ) == frameBytes )
+	{
+		for( const std::string& name : cued )
+		{
+			driver.plugin.SetFloatParameter(
+			    names.at( name ),
+			    cueValueAt( cues, name, frame, driver.plugin.GetFloatParameter( names.at( name ) ) ) );
+		}
+
+		const GLuint tex = uploadTexture( in, width, height );
+		driver.plugin.SetTime( frame / fps );
+		const bool ok = driver.render( target, tex, width, height );
+		glDeleteTextures( 1, &tex );
+
+		if( !ok )
+		{
+			std::fprintf( stderr, "astest: render failed on frame %d\n", frame );
+			releaseTarget( target );
+			return 1;
+		}
+
+		const std::vector< unsigned char > out = flipRows( readBytes( target ), width, height );
+		if( std::fwrite( out.data(), 1, out.size(), stdout ) != out.size() )
+		{
+			std::fprintf( stderr, "astest: short write on frame %d\n", frame );
+			releaseTarget( target );
+			return 1;
+		}
+
+		++frame;
+	}
+
+	std::fflush( stdout );
+	std::fprintf( stderr, "astest: %d frames\n", frame );
+	releaseTarget( target );
+	return 0;
+}
+
 void usage()
 {
 	std::printf(
@@ -1518,6 +1709,8 @@ void usage()
 	    "  --out PATH             render a frame\n"
 	    "  --stats                render, and report mean / sd / blown-out\n"
 	    "  --bench                render cost per frame, with glFinish\n"
+	    "  --pipe                 raw RGBA frames in on stdin, out on stdout\n"
+	    "  --script PATH          cue sheet: `frame  Parameter Name  value`\n"
 	    "  --size WxH             render size (default 640x360)\n"
 	    "  --frames N             frames to run before the one that is kept\n"
 	    "  --fps N                frame rate to run them at\n"
@@ -1542,6 +1735,8 @@ int main( int argc, char** argv )
 	int preset     = 0;
 	bool wantStats = false;
 	bool wantBench = false;
+	bool wantPipe  = false;
+	std::string scriptPath;
 	std::vector< std::pair< std::string, float > > sets;
 	std::vector< std::string > checks;
 	bool wantList = false;
@@ -1583,6 +1778,10 @@ int main( int argc, char** argv )
 			wantStats = true;
 		else if( arg == "--bench" )
 			wantBench = true;
+		else if( arg == "--pipe" )
+			wantPipe = true;
+		else if( arg == "--script" )
+			scriptPath = next();
 		else if( arg == "--all" )
 			checks = { "modes", "ratios", "delay", "rate",     "drag", "chorus",
 				       "names", "read",   "identity", "presets", "guard" };
@@ -1621,7 +1820,7 @@ int main( int argc, char** argv )
 			needGL.push_back( c );
 	}
 
-	if( !needGL.empty() || !outPath.empty() || wantStats || wantBench )
+	if( !needGL.empty() || !outPath.empty() || wantStats || wantBench || wantPipe )
 	{
 		CGLContextObj context = createContext();
 		if( context == nullptr )
@@ -1651,7 +1850,9 @@ int main( int argc, char** argv )
 		}
 
 		int rc = 0;
-		if( wantBench )
+		if( wantPipe )
+			rc = pipeFrames( width, height, fps, scriptPath, sets, preset );
+		if( rc == 0 && wantBench )
 			rc = benchmark( width, height, frames, preset );
 		if( rc == 0 && wantStats )
 			rc = statsOf( width, height, frames, fps, sets, preset );
