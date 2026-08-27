@@ -197,7 +197,7 @@ each, so a difference between them is the plugin and not the host.
 | tape allocated | 1365×768, 384 MB (1080p comp) | 1280×720, 337 MB (720p comp) |
 | factory preset applies | yes | yes |
 | renders on real footage | yes | yes |
-| Arena still alive afterwards | yes | yes, 0 crash dumps |
+| Arena still alive afterwards | yes | yes — **same pid** throughout, 0 crash dumps |
 
 The Windows run is the more interesting half: **llvmpipe is a completely
 different GLSL compiler from Apple's**, so it genuinely catches shader source

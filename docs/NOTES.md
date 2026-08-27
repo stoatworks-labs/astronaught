@@ -225,6 +225,28 @@ only logs after `compileShaders()` succeeds. Arena survived with **0 crash
 dumps**. The box has no GPU, so this says the plugin is correct and says nothing
 whatever about speed.
 
+### ⚠️ On win-lab, "Arena is alive" is not evidence — the pid is
+
+A co-session gating escapement found this on the same box the same night and
+wrote it up in [fleet-notes](https://github.com/stoatworks-labs/fleet-notes/blob/main/notes/reference_arena_on_winlab.md):
+**Arena restarts itself spontaneously on win-lab**, roughly every few minutes,
+with **no BugSplat dump written**. So the documented crash check — "look for a
+fresh `crash.dmp`" — reads clean, and the log simply ends with a new
+`Log started` after it. A plugin crash and a spontaneous restart are
+indistinguishable in the log. Their recorded launch history for the night
+includes 01:56, 02:13 and 02:40.
+
+That is why the result above is stated as **same pid**, not as "still running".
+Astronaught's window was 02:13 to 02:17, and `Get-Process Arena` returned
+**pid 1208** on every check across it — the launch, immediately after, after the
+REST sweep, and at the end. One of their restarts falls at 02:40, comfortably
+after. Had the check been "is a process called Arena running", it would have
+passed either way and proved nothing.
+
+Worth carrying: for any host-crash claim on this box, sample the pid at the start
+and compare at the end. An `alive` check at the end alone passes straight through
+a restart in the middle.
+
 ### Two traps that cost time here, neither of them the plugin
 
 **win-lab has no build tooling at all** — no cmake, no git, no `cl`, no vcpkg. The
