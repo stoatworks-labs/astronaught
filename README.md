@@ -30,6 +30,35 @@ each pass a further generation. Rendered by the plugin's own offline harness
 putting real frames through the real shipped shaders, not a screen capture.*
 
 <!-- downloads:start -->
+
+## Download
+
+**[v0.1.0](https://github.com/stoatworks-labs/astronaught/releases/tag/v0.1.0)** — prebuilt for macOS and Windows. Pick your platform:
+
+<details>
+<summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`astronaught-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/astronaught/releases/download/v0.1.0/astronaught-0.1.0-macos-universal.dmg) | 232 KB |
+| Universal (Apple Silicon + Intel) · .zip archive | [`astronaught-macos-universal.zip`](https://github.com/stoatworks-labs/astronaught/releases/latest/download/astronaught-macos-universal.zip) | 192 KB |
+
+</details>
+
+<details>
+<summary><b>Windows</b> — x64</summary>
+
+| Build | Download | Size |
+| --- | --- | --- |
+| x64 · .exe installer | [`astronaught-0.1.0-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/astronaught/releases/download/v0.1.0/astronaught-0.1.0-windows-x86_64-setup.exe) | 228 KB |
+| x64 · .zip archive | [`astronaught-windows-x86_64.zip`](https://github.com/stoatworks-labs/astronaught/releases/latest/download/astronaught-windows-x86_64.zip) | 121 KB |
+
+</details>
+
+All builds, checksums and release notes: [github.com/stoatworks-labs/astronaught/releases](https://github.com/stoatworks-labs/astronaught/releases).
+
+macOS builds are signed and notarised and open normally. The Windows builds are unsigned, so SmartScreen warns once.
+
 <!-- downloads:end -->
 
 ## What makes it a tape echo and not a frame delay
