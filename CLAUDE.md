@@ -81,23 +81,23 @@ Read `AGENTS.md` before changing the tape, the heads or the loop.
 
 ## Not done yet
 
-- ☠️ **Never loaded into Resolume, or any host.** No packaged build, nothing
-  installed, no show. The README's Status section says so plainly and should be
-  replaced rather than added to after the first real session.
-- **CI and release workflows exist and have NEVER RUN.** Both are adapted from
-  ferric's, which are proven there; the adaptation is not. `ci.yml` builds arm64
-  and runs the no-GPU half of the machine (`--modes --ratios --delay --rate
-  --drag --chorus --names`). `release.yml` is entirely untested here.
-- **No Windows build, no browser demo, no plugin-bench expectation.**
-- **`StoatworksAbout.h` is a hand-written placeholder.** astronaught has no
-  entry in the website's `projects.json`, so `sync-about.py` cannot generate it
-  and the four About buttons point at pages that do not exist.
+- **No NVIDIA or AMD driver has run it.** Verified on Apple's GLSL compiler and
+  on Mesa llvmpipe (win-lab, no GPU) — two compilers, no discrete-GPU driver.
+- **Never used on a show**, and the macOS artefacts are not signed or notarised.
+- **No user guide.** `docs/USER-GUIDE.md` does not exist, and the release
+  checklist treats the guide as a home that must agree with the others.
+- **No `projects.json` entry on the website**, so `sync-about.py` cannot generate
+  `StoatworksAbout.h` — it is a hand-written placeholder and the four About
+  buttons point at pages that do not exist.
+- **No video, no screenshots**, so `docs/hero.png` and the README's embed block
+  are absent.
+- **No browser demo, no plugin-bench expectation.**
 - **No OpenFX target, and not "not yet".** A tape loop cannot answer an OFX
-  host's request for an arbitrary frame in arbitrary order. The reasoning is in
+  host's request for an arbitrary frame in arbitrary order. Reasoning is in
   `CMakeLists.txt`.
-- **No trace overlay.** ferric's `Show Trace` has no equivalent here, and a plot
-  of where the heads are sitting on the tape would be the single most useful
-  diagnostic this plugin could have.
+- **No trace overlay.** ferric has `Show Trace`; a plot of where the three heads
+  are sitting on the tape would be the most useful diagnostic this plugin could
+  have, and would have made three of the four early bugs visible at a glance.
 
 ## Diagnostics
 

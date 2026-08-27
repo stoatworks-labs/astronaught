@@ -150,17 +150,30 @@ only where this repo depends on them.
 - the bundle is universal, exports `plugMain`, and its plist names the binary
   that is on disk
 
+**Verified in Resolume Arena 7.27.1 rev 15990**, on macOS (Apple M4 Max, GL 4.1
+Metal) and on Windows (win-lab, Mesa llvmpipe 26.2.0, GL 4.5, no GPU):
+
+- registers as `Astronaught` uid `AN01` category 1 on both
+- all four shader programs compile under **two different GLSL compilers**
+- 27 parameters, none truncated, all 12 Mode elements complete
+- the host clock is milliseconds, and the detection says so on both
+- a factory preset applies, holds through 10 s of live rendering, and drops to
+  Custom only on a genuine operator edit
+- renders correctly on real footage on both
+- Arena survives; 0 crash dumps on Windows
+
 **Assumed, and not small:**
 
-- ☠️ **It has never been loaded into any host.** Not Resolume, not OBS, nothing.
-  Every shader compiles under Apple's GLSL compiler in a headless context and
-  nowhere else.
-- The host clock detection handles milliseconds and the harness declares
-  seconds, so the *detection* has never had to decide anything.
-- No Windows build has been attempted; `vcpkg.json` is present and untested.
-- No performance figure exists at any resolution.
-- Nothing has been judged on real footage — only on a synthetic card built to
-  make an echo measurable, which is a different job from looking good.
+- **No NVIDIA or AMD driver has ever run it.** Apple's compiler and Mesa's are
+  two data points and neither is a discrete GPU driver.
+- **Nothing has been used on a show.**
+- **No performance figure on any GPU but one.** 0.93 ms at 1080p on an M4 Max;
+  llvmpipe is a CPU rasteriser and its numbers mean nothing here.
+- **The macOS artefacts are not yet signed or notarised.**
+- Windows was tested with a `workflow_dispatch` build whose version string reads
+  `0.0.0`, not with a tagged release artefact.
 
-The first session on a real host will find things no test here can. Replace the
-Status section then; do not append to it.
+The 4K figure deserves one caution: the store is capped at 1365×768 by its byte
+budget, so 4K is cheap *because the echoes are at a quarter of the composition's
+linear resolution*. That is defensible — see Store.h — but it is not the same
+statement as "it is fast at 4K".

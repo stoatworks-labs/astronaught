@@ -184,34 +184,96 @@ zero, put Intensity near unity, and the banding is visible. That is correct
 behaviour for a tape with no noise floor and it is also the honest limit of the
 choice.
 
+## First contact with a real host (2026-08-27)
+
+Both platforms, Arena 7.27.1 rev 15990 — the same host build on each, so a
+difference between them is the plugin.
+
+The order that made it cheap, and is worth repeating:
+
+1. **`oxbow selftest <bundle>` first.** It goes through the real `plugMain` and
+   `FF_INSTANTIATE_GL`, which is the only thing that catches the About-block bug
+   that has silently killed four fleet plugins in hosts while every in-repo
+   harness passed. Ten seconds, and it passed.
+2. **macOS Arena**, driven over REST.
+3. **Windows**, because that is where the fleet has actually shipped a plugin
+   that killed Arena at startup.
+
+Nothing was wrong. That is worth recording as plainly as a bug would be: the
+things that usually break at first contact — a shader that only compiles on one
+vendor, a truncated parameter name, a host clock in the wrong unit, a preset that
+snaps back to Custom — were all already handled, because they are all in
+fleet-notes and were designed around rather than discovered.
+
+**Three things only a real host could establish:**
+
+- **The clock really is milliseconds.** Both hosts log `scale=0.001000`. The code
+  has handled this from the first commit and the harness declares seconds, so the
+  detection had never actually had to *decide* anything until now.
+- **The factory preset holds.** Applied `Three Heads`, watched Arena report
+  `Mode='11 All + Rev'` and `Intensity=0.450` — the preset table exactly — and
+  hold through 10 s of live rendering. Then a hand on the Repeat Rate knob
+  produced `preset dropped to Custom: parameter 1 moved to 0.310000`. That is the
+  vertigo bug's fix working, and it had only been seen live once before, on
+  compander.
+- **Nothing is truncated**, including all twelve Mode Selector elements. Two
+  parameter names are exactly 16 characters and both display complete.
+
+**Windows is the half that pays.** llvmpipe is a completely different GLSL
+compiler from Apple's, and all four programs compiled under it — `initialised`
+only logs after `compileShaders()` succeeds. Arena survived with **0 crash
+dumps**. The box has no GPU, so this says the plugin is correct and says nothing
+whatever about speed.
+
+### Two traps that cost time here, neither of them the plugin
+
+**win-lab has no build tooling at all** — no cmake, no git, no `cl`, no vcpkg. The
+Windows DLL has to come from CI. `release.yml` carries `workflow_dispatch`, so a
+test binary costs one manual run and no tag; the artefact's version string reads
+`0.0.0`, which is the tell that it is not a release build.
+
+⚠️ **Checking a Windows log by line offset is a trap.** The first survival check
+read `Get-Content $log | Select-Object -Skip 1883` from a count taken before the
+launch, and reported **no registration line** — which fleet-notes says *is* the
+crash signature. Arena was fine. The log had **shrunk** to 1880 lines between the
+two reads, so the skip consumed everything. Find the last `Log started` and slice
+from there; never trust a line count taken at another moment.
+
+### A REST fact the fleet did not have
+
+☠️ **A `ChoiceParameter` is written by its VALUE STRING, not by its index.**
+
+    PUT /parameter/by-id/{id}   {"value": "Three Heads"}    -> 204
+    PUT /parameter/by-id/{id}   {"index": 2}                -> 400
+
+`{"index": N}` is what the GET returns alongside the value, so it is the obvious
+thing to write back, and it is a 400 every time. Also: the write endpoint is
+`/parameter/by-id/{id}` — there is no `/composition/params/by-id/{id}`, and
+guessing that one returns 404.
+
 ## Not done
 
-- **Never loaded into any host.** Not Resolume, not OBS. Every shader compiles
-  under Apple's GLSL compiler in a headless context and nowhere else. The
-  README's Status section says so and should be **replaced** after the first
-  real session, not appended to.
-- **CI and release workflows exist and have never run.** Adapted from ferric's,
-  which are proven there; the adaptation is not. `ci.yml`'s check step is the
-  one part rewritten rather than renamed — it runs the no-GPU half of the
-  machine, chosen so that `--drag` (the one decision the plugin rests on) and
-  `--modes` (the only assertion about a fact in the world) both gate a merge.
-- **No Windows build, no browser demo, no plugin-bench expectation.**
-- **`StoatworksAbout.h` is a hand-written placeholder** — no `projects.json`
-  entry exists, so `sync-about.py` cannot generate it and the four About buttons
-  point at pages that do not exist.
+- **No NVIDIA or AMD driver has run it.** Two GLSL compilers, no discrete-GPU
+  driver. Nothing has been used on a show.
+- **The macOS artefacts are not signed or notarised**, and no tagged release
+  exists yet.
+- **No user guide, no video, no screenshots, no `projects.json` entry.** The last
+  of those is why `StoatworksAbout.h` is a hand-written placeholder whose four
+  buttons point at pages that do not exist.
+- **No browser demo, no plugin-bench expectation.**
 - **No OpenFX target**, and structurally not "not yet": an OFX host wants an
   arbitrary frame in arbitrary order, and what is on a tape at frame 900 depends
-  on frames 1–899 including everything Intensity fed back. Afterglow escapes this
+  on frames 1-899 including everything Intensity fed back. Afterglow escapes this
   because its queue is a pure function of time; feedback ends that trick.
 - **No trace overlay.** ferric has `Show Trace`; a plot of where the three heads
   are currently sitting on the tape, and how much material is behind them, would
   be the single most useful diagnostic this plugin could have — and would have
-  made three of the four bugs above visible at a glance.
+  made three of the four early bugs visible at a glance.
 - **Bass and Treble act on the wet bus only.** That is a reading of the hardware
   — they sit in the echo path on the RE-201 — and not a measurement of one. It is
   also the more useful behaviour, since a tone control on the direct signal is a
-  colour correction and Resolume has several. Flagged because it is the one
-  panel decision here taken on judgement rather than on a cited figure.
+  colour correction and Resolume has several. Flagged because it is the one panel
+  decision here taken on judgement rather than on a cited figure.
 - **The tank's three legs share one field**, so their coupling is total where a
   real Z tank's is partial. What it costs is that the tank cannot ring on a mode
   of one spring alone.

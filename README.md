@@ -3,12 +3,11 @@
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
 > (Anthropic), directed and reviewed by a human author. The machine is verified
 > numerically by an offline harness that drives the real plugin class in a
-> headless GL context: the tape read is measured against an independent C++
-> implementation, the head spacing and the twelve-position Mode Selector are
-> checked against Roland's own published tables, and the behaviour the whole
-> design exists for — that changing the tape speed **drags** the echoes already
-> recorded rather than re-timing them — is asserted rather than asserted-to.
-> **It has never been loaded into Resolume, or into any host.** See
+> headless GL context — the head spacing and the twelve-position Mode Selector
+> are checked against Roland's own published tables, and the behaviour the whole
+> design exists for (that changing the tape speed **drags** the echoes already
+> recorded rather than re-timing them) is measured rather than asserted. It has
+> been run in Resolume Arena 7.27.1 on macOS and on Windows — see
 > [Status](#status) for exactly what that does and does not cover.
 
 A video signal put through a Space Echo.
@@ -121,12 +120,7 @@ picture has no negative half, so anything that sums accumulates, every time.
 
 ## Status
 
-**Nothing here has been near Resolume, or any other host.** No packaged build
-exists, nothing has been installed, and no show has been anywhere near it. What
-follows is what an offline harness establishes, which is a real thing and is not
-the same thing.
-
-`tools/verify.sh` runs 21 checks against a clean universal build. They drive the
+`tools/verify.sh` runs 21 checks against a clean universal build, driving the
 real plugin class through the real FFGL sequence in a headless OpenGL 4.1 core
 context.
 
@@ -148,18 +142,69 @@ Plus the release checks, run locally where they are cheap: the bundle is
 universal by `lipo`, exports `_plugMain`, keeps its `CFFGLPluginInfo` through the
 link, and its `CFBundleExecutable` names the binary that is actually on disk.
 
-CI and release workflows are present and have **never run** — both adapted from
-a sibling repo where they are proven, which the adaptation is not.
+### In Resolume
 
-**What none of that establishes:** whether Resolume's parameter panel looks
-right, whether the host's clock unit is detected correctly against a real
-Resolume (the code handles milliseconds and the harness declares seconds, so the
-detection itself is untested in the field), whether the shaders compile on NVIDIA
-or AMD or on Windows at all, what it costs per frame, or whether any of it looks
-good on real footage rather than on a synthetic test card.
+Verified in **Arena 7.27.1 rev 15990** on both platforms — the same host build on
+each, so a difference between them is the plugin and not the host.
 
-The first session on a real host will find things no test here can. When it
-happens, this section gets replaced rather than added to.
+| | macOS | Windows |
+|---|---|---|
+| renderer | Apple M4 Max, GL 4.1 Metal 90.5 | Mesa llvmpipe 26.2.0, GL 4.5 Core |
+| registers | `Astronaught` uid `AN01` category 1 | same |
+| all four shader programs compile | yes | yes |
+| parameters as the host reads them | 27, none truncated | 27, none truncated |
+| Mode Selector elements complete | all 12 | all 12 |
+| host clock unit detected | milliseconds | milliseconds |
+| tape allocated | 1365×768, 384 MB (1080p comp) | 1280×720, 337 MB (720p comp) |
+| factory preset applies | yes | yes |
+| renders on real footage | yes | yes |
+| Arena still alive afterwards | yes | yes, 0 crash dumps |
+
+The Windows run is the more interesting half: **llvmpipe is a completely
+different GLSL compiler from Apple's**, so it genuinely catches shader source
+that only ever compiled on one vendor. It says nothing about NVIDIA or AMD driver
+quirks, and nothing at all about performance — that box has no GPU.
+
+Three things only a real host could establish:
+
+- **The clock really is milliseconds.** The code has always handled it and the
+  harness declares seconds, so until now the detection had never had to decide
+  anything. Both hosts log `scale=0.001000`.
+- **A factory preset applies, HOLDS, and drops only on a real edit.** This is the
+  bug that shipped in vertigo and cost the fleet a release — Resolume does not
+  consume value events, so a naive implementation snaps back to Custom on the
+  host's own echo. Applied `Three Heads`, watched it hold through 10 s of live
+  rendering while Arena pushed parameters at it, then moved Repeat Rate by hand
+  and got `preset dropped to Custom: parameter 1 moved to 0.310000`.
+- **Nothing is truncated.** Two names are exactly 16 characters — `Source on
+  GitHub` and `Support the work`, both from the shared About block — and both
+  display complete. The host cannot tell "fits exactly" from "cut", so those are
+  worth re-checking on any rename.
+
+### Cost
+
+Measured with `astest --bench`, which puts `glFinish()` around each frame and
+discards the first twenty — GL is asynchronous, and the first frames compile four
+programs and allocate the store. Apple M4 Max, `Three Heads` preset:
+
+| composition | tape | mean | best |
+|---|---|---|---|
+| 1280×720 | 1280×720 | 0.95 ms | 0.49 ms |
+| 1920×1080 | 1365×768 | 0.93 ms | 0.60 ms |
+| 3840×2160 | 1365×768 | 1.42 ms | 1.00 ms |
+
+4K costs about 1.5× 1080p rather than 4×, because the store is capped by its byte
+budget and the record and playback passes run at **tape** resolution — only the
+output pass scales with the composition.
+
+No figure exists for any other GPU. llvmpipe is a CPU rasteriser and its numbers
+would be meaningless here.
+
+### Still not established
+
+- No NVIDIA or AMD driver has ever run it.
+- Nothing has been used on a show.
+- The macOS artefacts are not yet signed or notarised.
 
 ### Memory
 
