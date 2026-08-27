@@ -251,15 +251,36 @@ thing to write back, and it is a 400 every time. Also: the write endpoint is
 `/parameter/by-id/{id}` — there is no `/composition/params/by-id/{id}`, and
 guessing that one returns 404.
 
+## Registered before the tag (2026-08-27)
+
+The release checklist is emphatic about this and it is worth repeating here: a
+project that has never shipped is **absent from the website's `projects.json`**,
+and three things follow that do not announce themselves. `gen-downloads.py`
+discovers projects from that file, so a scoped run prints nothing and exits 0.
+`sync-about.py` has its **own** repo table, separate from `projects.json`, and
+needs its own entry. And the About block cannot carry the guide URL, because the
+URL is a fact about a site page that does not exist yet — so the binary ships
+with three buttons where every sibling has four, and the only fix is another
+release. Afterglow and gaffer each cost a second release inside an hour by
+tagging first.
+
+So, before the tag: `projects.json`, `scripts/shots.json`, the `sync-about.py`
+target table, `make_thumbnails.py`, `build_guides.py astronaught`, then
+`sync-about.py --only astronaught --apply` and a rebuild — the About block
+changing size is exactly what breaks a repo's parameter sweep.
+
+⚠️ **`make_thumbnails.py` ignores `--help` and just runs**, over all 123
+projects. It happened to be harmless here (the only pre-existing dirty
+thumbnails were a co-session's), but it is not a script to poke at to find out
+what its flags are.
+
 ## Not done
 
 - **No NVIDIA or AMD driver has run it.** Two GLSL compilers, no discrete-GPU
   driver. Nothing has been used on a show.
 - **The macOS artefacts are not signed or notarised**, and no tagged release
   exists yet.
-- **No user guide, no video, no screenshots, no `projects.json` entry.** The last
-  of those is why `StoatworksAbout.h` is a hand-written placeholder whose four
-  buttons point at pages that do not exist.
+- **No video yet**, so there is no embed block in the README or `projects.json`.
 - **No browser demo, no plugin-bench expectation.**
 - **No OpenFX target**, and structurally not "not yet": an OFX host wants an
   arbitrary frame in arbitrary order, and what is on a tape at frame 900 depends

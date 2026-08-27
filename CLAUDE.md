@@ -84,13 +84,7 @@ Read `AGENTS.md` before changing the tape, the heads or the loop.
 - **No NVIDIA or AMD driver has run it.** Verified on Apple's GLSL compiler and
   on Mesa llvmpipe (win-lab, no GPU) — two compilers, no discrete-GPU driver.
 - **Never used on a show**, and the macOS artefacts are not signed or notarised.
-- **No user guide.** `docs/USER-GUIDE.md` does not exist, and the release
-  checklist treats the guide as a home that must agree with the others.
-- **No `projects.json` entry on the website**, so `sync-about.py` cannot generate
-  `StoatworksAbout.h` — it is a hand-written placeholder and the four About
-  buttons point at pages that do not exist.
-- **No video, no screenshots**, so `docs/hero.png` and the README's embed block
-  are absent.
+- **No video**, so the README has no embed block yet.
 - **No browser demo, no plugin-bench expectation.**
 - **No OpenFX target, and not "not yet".** A tape loop cannot answer an OFX
   host's request for an arbitrary frame in arbitrary order. Reasoning is in
