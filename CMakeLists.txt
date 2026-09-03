@@ -43,6 +43,9 @@ endif()
 
 option(ASTRONAUGHT_BUILD_TOOLS "Build the offline render and measurement harness" ON)
 
+# For add_test below. Harmless when nothing registers a test.
+include(CTest)
+
 # ---------------------------------------------------------------------------
 # The Resolume FFGL SDK, as a git submodule pinned to b1afaf9 -- the rev the
 # rest of the fleet pins. See AGENTS.md for what is wrong with it.
@@ -150,6 +153,17 @@ if(ASTRONAUGHT_BUILD_TOOLS AND APPLE)
         "-framework OpenGL"
         "-framework AppKit"
     )
+endif()
+
+# The tape's bookkeeping, driven for a show's worth of frames. Separate from
+# astest because it needs no GL, no host and no window, so it runs anywhere and
+# in a fraction of a second — which matters for the thing it checks: the rebase
+# only happens after thousands of passes, and astest renders about 150 frames,
+# which is why a loop that destroyed itself every show was never caught.
+if(ASTRONAUGHT_BUILD_TOOLS)
+    add_executable(tapeprobe tools/tapeprobe.cpp source/Tape.cpp)
+    target_include_directories(tapeprobe PRIVATE source)
+    add_test(NAME tape_survives_a_show COMMAND tapeprobe)
 endif()
 
 # ---------------------------------------------------------------------------

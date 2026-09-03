@@ -9,10 +9,19 @@ namespace tape
 {
 namespace
 {
-/// Rebase when the record head gets this far from the origin. Well inside where
+/// Rebase when the record head gets this far past the origin. Well inside where
 /// a float stops separating adjacent scanlines, and far enough apart that the
 /// rebase itself is rare. See Loop::Origin.
-constexpr double kRebaseAt = 4096.0;
+///
+/// 4096 was not inside it. `HeadPos`, `SlotStart` and the shader's `local` are
+/// float32, and one output scanline is `span / height` material units: at the
+/// default speed, 60 fps and 1080 lines that is 6.2e-5, so a float ulp exceeds
+/// one scanline above roughly 6.2e-5 * 2^24 ≈ 1040 units — about four minutes.
+/// At the slowest Repeat Rate it is ≈260. Past that the phase quantises to
+/// several lines and the tear steps instead of rolling, which is the horizontal
+/// banding Tape.h predicts. 256 stays inside the resolvable region at every
+/// speed the plugin offers, and a rebase is cheap: kSlots float subtractions.
+constexpr double kRebaseAt = 256.0;
 } // namespace
 
 Loop::Loop()
@@ -34,10 +43,23 @@ void Loop::Erase()
 
 void Loop::Rebase()
 {
-	// Shift every recorded position down by the current head position and move
-	// the origin to match. Only the differences ever matter, so this is exact
-	// in the sense that counts: no head lands anywhere different afterwards.
-	const double shift = head;
+	// Shift every recorded position down by how far the head has run past the
+	// origin, and move the origin up to meet it. Only the differences ever
+	// matter, so this is exact in the sense that counts: no head lands anywhere
+	// different afterwards.
+	//
+	// `head` stays ABSOLUTE and is deliberately not reset. Record() is handed
+	// the plugin's absolute, monotonic position, so a head zeroed here made the
+	// very next pass compute `span = position - 0` — the whole ~4096 units back
+	// to the start of time instead of one frame — and store its start at
+	// `0 - origin`, i.e. ~-4096. The rebase condition then fired again on that
+	// pass, and on every pass after it: origin ran away by ~4096 each time,
+	// every head landed inside the newest kilometre-long slot at phase ~1, and
+	// all three read the bottom of the frame just written. The echoes vanished,
+	// replaced by a near-zero-delay copy, permanently — 5 to 68 minutes into a
+	// show depending on Repeat Rate, and only a resolution change (which erases
+	// the loop) recovered it.
+	const double shift = head - origin;
 
 	for( int i = 0; i < kSlots; ++i )
 	{
@@ -45,8 +67,7 @@ void Loop::Rebase()
 			starts[ i ] = static_cast< float >( starts[ i ] - shift );
 	}
 
-	origin += shift;
-	head = 0.0;
+	origin = head;
 }
 
 int Loop::Record( double position )
@@ -69,7 +90,10 @@ int Loop::Record( double position )
 	newest  = slot;
 	written = std::min( written + 1, kSlots );
 
-	if( head - 0.0 > kRebaseAt )
+	// Distance PAST THE ORIGIN, which is what the shift is measured in — `head`
+	// is absolute, so comparing it against zero would rebase once and then
+	// never again.
+	if( head - origin > kRebaseAt )
 		Rebase();
 
 	return slot;
