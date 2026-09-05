@@ -35,14 +35,14 @@ putting real frames through the real shipped shaders, not a screen capture.*
 
 ## Download
 
-**[v0.1.1](https://github.com/stoatworks-labs/astronaught/releases/tag/v0.1.1)** — prebuilt for macOS and Windows. Pick your platform:
+**[v0.1.2](https://github.com/stoatworks-labs/astronaught/releases/tag/v0.1.2)** — prebuilt for macOS and Windows. Pick your platform:
 
 <details>
 <summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .dmg disk image | [`astronaught-0.1.1-macos-universal.dmg`](https://github.com/stoatworks-labs/astronaught/releases/download/v0.1.1/astronaught-0.1.1-macos-universal.dmg) | 233 KB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`astronaught-0.1.2-macos-universal.dmg`](https://github.com/stoatworks-labs/astronaught/releases/download/v0.1.2/astronaught-0.1.2-macos-universal.dmg) | 233 KB |
 | Universal (Apple Silicon + Intel) · .zip archive | [`astronaught-macos-universal.zip`](https://github.com/stoatworks-labs/astronaught/releases/latest/download/astronaught-macos-universal.zip) | 192 KB |
 
 </details>
@@ -52,7 +52,7 @@ putting real frames through the real shipped shaders, not a screen capture.*
 
 | Build | Download | Size |
 | --- | --- | --- |
-| x64 · .exe installer | [`astronaught-0.1.1-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/astronaught/releases/download/v0.1.1/astronaught-0.1.1-windows-x86_64-setup.exe) | 228 KB |
+| x64 · .exe installer | [`astronaught-0.1.2-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/astronaught/releases/download/v0.1.2/astronaught-0.1.2-windows-x86_64-setup.exe) | 228 KB |
 | x64 · .zip archive | [`astronaught-windows-x86_64.zip`](https://github.com/stoatworks-labs/astronaught/releases/latest/download/astronaught-windows-x86_64.zip) | 121 KB |
 
 </details>
