@@ -6,6 +6,10 @@ tape pulled past an erase head, a record head and three playback heads at equal 
 twelve-position Mode Selector deciding which of them are listening; an Intensity control feeding
 the head mix back onto the tape; and a three-spring reverb tank hanging off the input in parallel.
 
+![Real frames from Resolume's own demo footage put through the real shipped shaders by the plugin's offline harness in a headless GL context — not a screen cap…](hero.png)
+
+*Real frames from Resolume's own demo footage put through the real shipped shaders by the plugin's offline harness in a headless GL context — not a screen capture of a host.*
+
 One idea holds the whole thing up, and it is worth twenty seconds because every control follows
 from it.
 
