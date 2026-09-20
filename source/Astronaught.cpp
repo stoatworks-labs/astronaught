@@ -27,7 +27,7 @@ using namespace astronaught;
 static CFFGLPluginInfo PluginInfo(
 	PluginFactory< Astronaught >,
 	"AN01",
-	"Astronaught",
+	"SW Astronaught",
 	2,
 	1,
 	0,
