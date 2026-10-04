@@ -183,6 +183,9 @@ Plus the release checks, run locally where they are cheap: the bundle is
 universal by `lipo`, exports `_plugMain`, keeps its `CFFGLPluginInfo` through the
 link, and its `CFBundleExecutable` names the binary that is actually on disk.
 
+The released macOS artefacts are Developer ID-signed and notarised, and have
+been since v0.1.0.
+
 ### In Resolume
 
 Verified in **Arena 7.27.1 rev 15990** on both platforms — the same host build on
@@ -245,7 +248,6 @@ would be meaningless here.
 
 - No NVIDIA or AMD driver has ever run it.
 - Nothing has been used on a show.
-- The macOS artefacts are not yet signed or notarised.
 
 ### Memory
 

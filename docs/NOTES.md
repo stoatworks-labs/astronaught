@@ -300,8 +300,6 @@ what its flags are.
 
 - **No NVIDIA or AMD driver has run it.** Two GLSL compilers, no discrete-GPU
   driver. Nothing has been used on a show.
-- **The macOS artefacts are not signed or notarised**, and no tagged release
-  exists yet.
 - **No video yet**, so there is no embed block in the README or `projects.json`.
 - **No browser demo, no plugin-bench expectation.**
 - **No OpenFX target**, and structurally not "not yet": an OFX host wants an
@@ -320,3 +318,9 @@ what its flags are.
 - **The tank's three legs share one field**, so their coupling is total where a
   real Z tank's is partial. What it costs is that the tank cannot ring on a mode
   of one spring alone.
+
+*2026-10-04:* a line here said the macOS artefacts were not signed or notarised
+and that no tagged release existed. Both had been untrue since v0.1.0
+(2026-08-27): the autosign agent signed and notarised its macOS zip and dmg,
+`check-notarised.py` confirmed them on 2026-08-28, and its current record
+(`stoatworks-backend/release/notarised.json`) has v0.1.3's signed too.
