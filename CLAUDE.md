@@ -83,8 +83,8 @@ Read `AGENTS.md` before changing the tape, the heads or the loop.
 
 - **No NVIDIA or AMD driver has run it.** Verified on Apple's GLSL compiler and
   on Mesa llvmpipe (win-lab, no GPU) — two compilers, no discrete-GPU driver.
-- **Never used on a show**, and the macOS artefacts are not signed or notarised.
-- **No video**, so the README has no embed block yet.
+- **Never used on a show.** The macOS artefacts are Developer ID-signed and
+  notarised, and have been since v0.1.0.
 - **No browser demo, no plugin-bench expectation.**
 - **No OpenFX target, and not "not yet".** A tape loop cannot answer an OFX
   host's request for an arbitrary frame in arbitrary order. Reasoning is in

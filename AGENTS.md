@@ -169,7 +169,6 @@ Metal) and on Windows (win-lab, Mesa llvmpipe 26.2.0, GL 4.5, no GPU):
 - **Nothing has been used on a show.**
 - **No performance figure on any GPU but one.** 0.93 ms at 1080p on an M4 Max;
   llvmpipe is a CPU rasteriser and its numbers mean nothing here.
-- **The macOS artefacts are not yet signed or notarised.**
 - Windows was tested with a `workflow_dispatch` build whose version string reads
   `0.0.0`, not with a tagged release artefact.
 
