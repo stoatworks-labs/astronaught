@@ -3,7 +3,7 @@
 ## Third-party code
 
 **Resolume FFGL SDK** — `external/ffgl`, a git submodule pinned to `b1afaf9`.
-Copyright Resolume, MIT. https://github.com/resolume/ffgl
+Copyright FreeFrame, BSD-3-Clause. https://github.com/resolume/ffgl
 
 **zlib** — linked from the OS for the harness's PNG writer. Not vendored.
 
