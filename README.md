@@ -3,14 +3,14 @@
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
 > (Anthropic), directed and reviewed by a human author. The machine is verified
 > numerically by an offline harness that drives the real plugin class in a
-> headless GL context — the head spacing and the twelve-position Mode Selector
+> headless GL context. The head spacing and the twelve-position Mode Selector
 > are checked against Roland's own published tables, and the behaviour the whole
 > design exists for (that changing the tape speed **drags** the echoes already
-> recorded rather than re-timing them) is measured rather than asserted. It has
-> been run in Resolume Arena 7.27.1 on macOS and on Windows — see
-> [Status](#status) for exactly what that does and does not cover.
+> recorded rather than re-timing them) is measured rather than taken on trust.
+> It's been run in Resolume Arena 7.27.1 on macOS and on Windows;
+> [Status](#status) says what that does and doesn't cover.
 
-A video signal put through a Space Echo.
+A video signal put through a Space Echo, because somebody had to.
 
 Astronaught is a model of the **Roland RE-201**: a loop of tape pulled past an
 erase head, a record head and three playback heads at equal intervals; a
@@ -26,10 +26,10 @@ An FFGL effect for **Resolume Arena and Avenue**.
 
 ![Three heads, on real footage](docs/hero.png)
 
-*Selector position 11 — all three heads and the spring tank — on a clip of
+*Selector position 11 (all three heads and the spring tank) on a clip of
 Resolume's own demo footage. The figure is on the tape three times at 1 : 2 : 3,
 each pass a further generation. Rendered by the plugin's own offline harness
-putting real frames through the real shipped shaders, not a screen capture.*
+putting real frames through the real shipped shaders, rather than a screen capture.*
 
 <!-- downloads:start -->
 
@@ -69,13 +69,13 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 A frame is laid on the tape wherever the tape had reached when it was recorded,
 and it stays there. A playback head is a fixed distance down the path, so it
-reads whatever material has arrived under it. The delay is not stored anywhere —
-it is the time the tape takes to cover the head spacing.
+reads whatever material has arrived under it. The delay isn't stored anywhere.
+It's the time the tape takes to cover the head spacing.
 
 Three things fall out of that substitution, none of them written as code:
 
-**Turning Repeat Rate drags every echo already on the tape.** The material does
-not move; only the rate at which the heads reach it does. Roland describes both
+**Turning Repeat Rate drags every echo already on the tape.** The material doesn't
+move; only the rate at which the heads reach it does. Roland describes both
 halves of this: turning the knob up means "sounds are played back more closely
 together, and the pitch begins to rise", and at the same time "the density of the
 sounds during recording gradually decreases, so when those sounds reach the
@@ -87,7 +87,7 @@ is still reading 450 ms-old material.
 
 **The picture comes back torn and stretched.** A frame is written down the tape
 while the tape is moving, so it occupies a *span* of it, and a head almost never
-lands on a boundary — the top of the output is the bottom of one pass and the
+lands on a boundary, so the top of the output is the bottom of one pass and the
 bottom is the top of the next. Run the tape faster than it recorded and the head
 covers more material per output row, so the picture comes back squeezed. This is
 the video form of the pitch shift.
@@ -97,12 +97,12 @@ and each head reads a different point on the tape, so each sees the speed error
 from a different moment in the past. Roland calls the result "the RE-201's
 characteristic chorus effect". `astest --chorus` measures it: with a steady
 transport head 3 is exactly three times head 1 (to 0.0000%), and at the default
-Wow & Flutter it is not (2.01%).
+Wow & Flutter it isn't (2.01%).
 
 ## The Mode Selector
 
-Twelve positions, transcribed from Roland's printed table rather than derived —
-the obvious guess is wrong.
+Twelve positions, transcribed from Roland's printed table rather than worked out,
+because the obvious guess is wrong.
 
 | Mode | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -111,13 +111,13 @@ the obvious guess is wrong.
 | Head 3 | | | ● | ● | | | ● | | ● | ● | ● | |
 | Reverb | | | | | ● | ● | ● | ● | ● | ● | ● | ● |
 
-There is **no echo-only 1+2, 1+3 or 1+2+3 position**. Positions 1–4 are echo
+There's **no echo-only 1+2, 1+3 or 1+2+3 position**. Positions 1–4 are echo
 only and the only combination among them is 2+3; 5–11 all have the tank in; 12 is
 the tank alone. Six of the eight possible head combinations never appear dry.
 `astest --modes` asserts every cell, including the three that must be absent.
 
 The heads are "arranged sequentially at equal intervals", so their delays are
-locked at **1 : 2 : 3** — one delay control, not three. Head 1 runs from 70 ms to
+locked at **1 : 2 : 3**: one delay control, not three. Head 1 runs from 70 ms to
 1 s, which puts head 3 at up to the three seconds the machine is known for.
 
 ## What is Roland's and what is not
@@ -142,15 +142,15 @@ the panel is Roland's:
 
 All three have the same cause, which is the one real difference between a picture
 and the signal this machine was built for: **a video signal is unipolar, and its
-echoes cannot cancel.** In audio the repeats are as often negative as positive,
+echoes can't cancel.** In audio the repeats are as often negative as positive,
 which is why a real RE-201 is usable with three heads up and high Intensity. A
 picture has no negative half, so anything that sums accumulates, every time.
 
 - **The head bus is divided by the number of heads up.** Modelled literally,
-  three heads over a part of the picture that has not moved are three copies of
+  three heads over a part of the picture that hasn't moved are three copies of
   the same value, and eight of the twelve selector positions rendered flat white
-  at any Intensity worth having. What is lost is that position 11 is no longer
-  three times brighter than position 1 — which is the right thing to lose, since
+  at any Intensity worth having. What's lost is that position 11 is no longer
+  three times brighter than position 1, which is the right thing to lose, since
   the difference between them is that one has three taps.
 - **The record amplifier's headroom is shared** between the input and the
   regeneration, so more Intensity leaves less room for the input. This is the
@@ -179,7 +179,7 @@ context.
 | `--guard` | four hostile machines, including the loop past unity, leave 0 non-finite samples |
 | `tools/sweep.py` | all 22 controls reach the picture |
 
-Plus the release checks, run locally where they are cheap: the bundle is
+Plus the release checks, run locally where they're cheap: the bundle is
 universal by `lipo`, exports `_plugMain`, keeps its `CFFGLPluginInfo` through the
 link, and its `CFBundleExecutable` names the binary that is actually on disk.
 
@@ -188,8 +188,8 @@ been since v0.1.0.
 
 ### In Resolume
 
-Verified in **Arena 7.27.1 rev 15990** on both platforms — the same host build on
-each, so a difference between them is the plugin and not the host.
+Verified in **Arena 7.27.1 rev 15990** on both platforms, with the same host build
+on each, so any difference between them is the plugin rather than the host.
 
 | | macOS | Windows |
 |---|---|---|
@@ -205,9 +205,9 @@ each, so a difference between them is the plugin and not the host.
 | Arena still alive afterwards | yes | yes — **same pid** throughout, 0 crash dumps |
 
 The Windows run is the more interesting half: **llvmpipe is a completely
-different GLSL compiler from Apple's**, so it genuinely catches shader source
-that only ever compiled on one vendor. It says nothing about NVIDIA or AMD driver
-quirks, and nothing at all about performance — that box has no GPU.
+different GLSL compiler from Apple's**, so it catches shader source that only
+ever compiled on one vendor. It says nothing about NVIDIA or AMD driver quirks,
+and nothing at all about performance, since that box has no GPU.
 
 Three things only a real host could establish:
 
@@ -215,21 +215,21 @@ Three things only a real host could establish:
   harness declares seconds, so until now the detection had never had to decide
   anything. Both hosts log `scale=0.001000`.
 - **A factory preset applies, HOLDS, and drops only on a real edit.** This is the
-  bug that shipped in vertigo and cost the fleet a release — Resolume does not
+  bug that shipped in vertigo and cost the fleet a release: Resolume doesn't
   consume value events, so a naive implementation snaps back to Custom on the
-  host's own echo. Applied `Three Heads`, watched it hold through 10 s of live
+  host's own echo. I applied `Three Heads`, watched it hold through 10 s of live
   rendering while Arena pushed parameters at it, then moved Repeat Rate by hand
   and got `preset dropped to Custom: parameter 1 moved to 0.310000`.
-- **Nothing is truncated.** Two names are exactly 16 characters — `Source on
-  GitHub` and `Support the work`, both from the shared About block — and both
-  display complete. The host cannot tell "fits exactly" from "cut", so those are
+- **Nothing is truncated.** Two names are exactly 16 characters (`Source on
+  GitHub` and `Support the work`, both from the shared About block), and both
+  display complete. The host can't tell "fits exactly" from "cut", so those are
   worth re-checking on any rename.
 
 ### Cost
 
 Measured with `astest --bench`, which puts `glFinish()` around each frame and
-discards the first twenty — GL is asynchronous, and the first frames compile four
-programs and allocate the store. Apple M4 Max, `Three Heads` preset:
+discards the first twenty, because GL is asynchronous and the first frames compile
+four programs and allocate the store. Apple M4 Max, `Three Heads` preset:
 
 | composition | tape | mean | best |
 |---|---|---|---|
@@ -238,7 +238,7 @@ programs and allocate the store. Apple M4 Max, `Three Heads` preset:
 | 3840×2160 | 1365×768 | 1.42 ms | 1.00 ms |
 
 4K costs about 1.5× 1080p rather than 4×, because the store is capped by its byte
-budget and the record and playback passes run at **tape** resolution — only the
+budget and the record and playback passes run at **tape** resolution; only the
 output pass scales with the composition.
 
 No figure exists for any other GPU. llvmpipe is a CPU rasteriser and its numbers
@@ -253,14 +253,14 @@ would be meaningless here.
 
 The loop is 96 passes of the record head, held as one texture array. At 1080p
 that is 96 × 1365×768 = **384 MB**, the store having been scaled to 0.711 of the
-composition to fit its budget. The direct path never goes near it — `Direct
-Volume` is a dry feed straight off the input — so what loses resolution is the
+composition to fit its budget. The direct path never goes near it (`Direct
+Volume` is a dry feed straight off the input), so what loses resolution is the
 echoes, and an echo off a tape has less bandwidth than the signal that made it.
 
 Reaching further back than 96 passes means recording less often, which is a
 memory cap and is also, conveniently, the right physics: a tape running slowly
-does carry less signal per second. The number 96 comes from a byte budget and not
-from a Roland spec sheet.
+does carry less signal per second. The number 96 comes from a byte budget rather
+than a Roland spec sheet.
 
 ## Build
 
@@ -268,8 +268,8 @@ from a Roland spec sheet.
     cmake --build build
     cmake --install build          # into ~/Documents/Resolume Arena/Extra Effects
 
-macOS builds universal by default. `-DCMAKE_OSX_ARCHITECTURES=arm64` for a faster
-dev build — but verify with `lipo`, never with the build log.
+macOS builds universal by default. `-DCMAKE_OSX_ARCHITECTURES=arm64` for a quicker
+dev build, but verify with `lipo`, never with the build log.
 
     git submodule update --init --recursive
 
@@ -284,10 +284,10 @@ dev build — but verify with `lipo`, never with the build log.
 ## Diagnostics
 
 `~/Library/Logs/astronaught/astronaught.YYYY-MM-DD.log`. A log file and nothing
-else — no crash handler, because a plugin loaded into Resolume has no business
-intercepting faults that are not its own. It covers the failures that all look
-identical from outside ("the effect does nothing"): a shader that will not
-compile, a tape that would not allocate, and what the host's clock actually
+else. There's no crash handler, because a plugin loaded into Resolume has no
+business intercepting faults that aren't its own. It covers the failures that all
+look identical from outside ("the effect does nothing"): a shader that won't
+compile, a tape that wouldn't allocate, and what the host's clock actually
 turned out to be.
 
 ## Licence
