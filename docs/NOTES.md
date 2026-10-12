@@ -212,7 +212,7 @@ fleet-notes and were designed around rather than discovered.
   detection had never actually had to *decide* anything until now.
 - **The factory preset holds.** Applied `Three Heads`, watched Arena report
   `Mode='11 All + Rev'` and `Intensity=0.450` — the preset table exactly — and
-  hold through 10 s of live rendering. Then a hand on the Repeat Rate knob
+  hold through 10 s of live rendering. Then a Repeat Rate write over REST
   produced `preset dropped to Custom: parameter 1 moved to 0.310000`. That is the
   vertigo bug's fix working, and it had only been seen live once before, on
   compander.

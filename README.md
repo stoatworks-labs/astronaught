@@ -218,7 +218,7 @@ Three things only a real host could establish:
   bug that shipped in vertigo and cost the fleet a release: Resolume doesn't
   consume value events, so a naive implementation snaps back to Custom on the
   host's own echo. I applied `Three Heads`, watched it hold through 10 s of live
-  rendering while Arena pushed parameters at it, then moved Repeat Rate by hand
+  rendering while Arena pushed parameters at it, then moved Repeat Rate over REST
   and got `preset dropped to Custom: parameter 1 moved to 0.310000`.
 - **Nothing is truncated.** Two names are exactly 16 characters (`Source on
   GitHub` and `Support the work`, both from the shared About block), and both
