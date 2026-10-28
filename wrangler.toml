@@ -1,0 +1,47 @@
+# Cloudflare deployment for the Astronaught browser demo.
+#
+# A static-assets-only Worker, the shape the rest of the fleet uses. Cloudflare
+# Pages is NOT in the path: `pages_build_output_dir` here would fail with "Could
+# not detect a directory containing static files", which reads like a missing
+# build step but is actually the wrong config key.
+#
+# There is **no build command**. The demo is hand-written ES modules and its
+# shared kit is vendored into `demo/vendor/` by
+# `stoatworks-backend/resolume-demo/sync.sh`, so what is committed is what is
+# served. `.github/workflows/deploy.yml` deploys it on a push to main; by hand:
+#
+#   cf-run npx wrangler deploy
+#
+# `demo/_headers` carries the CSP and is honoured by the assets runtime. There is
+# deliberately no `_redirects`: the Pages way to route an SPA is a
+# `/*  /index.html  200` line there and the assets runtime rejects it as an
+# infinite loop, failing the whole deploy. This is a single page, so it needs
+# neither.
+#
+# ☠️ Pushing ANY branch to this repo can trigger a Workers Build that deploys to
+# PRODUCTION if one is ever connected in the dashboard -- Cloudflare does not
+# treat a non-default branch as a preview. None is connected; deploy.yml is the
+# path. Recover with `cf-run npx wrangler deploy`, and verify by CONTENT: a
+# wrong page still answers 200.
+
+name = "astronaught-demo"
+compatibility_date = "2026-08-17"
+
+[assets]
+directory = "./demo"
+
+# Attached here rather than by hand in the dashboard, so the hostname is part of
+# the repo and a fresh deploy cannot come up without it.
+#
+# A ROUTE, not a custom domain. stoatworks-labs.com has been at Cloudflare's
+# limit of 100 Workers custom domains per zone since 2026-09-24, where
+# `custom_domain = true` fails with API error 100122 while the upload itself
+# succeeds -- so wrangler reports a Worker that nothing serves. A route has no
+# such limit, but it needs a proxied DNS record to exist first, which wrangler
+# does not create: `astronaught-demo` has to be an AAAA 100:: record, proxied,
+# made through the API before the first deploy (slowscan's recipe). It was made
+# on 2026-10-28, before this page's first deploy. Delete that record and this
+# page goes dark with a green deploy.
+[[routes]]
+pattern = "astronaught-demo.stoatworks-labs.com/*"
+zone_name = "stoatworks-labs.com"

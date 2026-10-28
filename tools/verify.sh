@@ -205,6 +205,37 @@ else
 fi
 
 #---------------------------------------------------------------------------
+# The browser demo.
+#
+# demo/shaders.js carries copies of source/shaders/*.cpp, and demo/port.js a
+# hand translation of the CPU half. A copy that drifts still paints a plausible
+# picture, so the drift has to fail here: rerun
+# `python3 demo/tools/check_shaders.py --write` after changing a shader, and
+# change port.js with the C++ it mirrors.
+#---------------------------------------------------------------------------
+head_ "the browser demo"
+
+if [ -f demo/tools/check_shaders.py ]; then
+    if python3 demo/tools/check_shaders.py >/tmp/astest.demo-shaders.log 2>&1; then
+        ok "$(tail -1 /tmp/astest.demo-shaders.log)"
+    else
+        bad "the demo's shaders have drifted from source/shaders -- see /tmp/astest.demo-shaders.log"
+    fi
+elif [ -d demo ]; then
+    bad "demo/ exists but demo/tools/check_shaders.py does not"
+fi
+
+if [ ! -x demo/tools/crosscheck/crosscheck.sh ]; then
+    [ -d demo ] && bad "demo/ exists but demo/tools/crosscheck/crosscheck.sh does not"
+elif ! command -v node >/dev/null 2>&1; then
+    skip "the demo's port against the plugin class -- node is not installed"
+elif demo/tools/crosscheck/crosscheck.sh >/tmp/astest.demo-port.log 2>&1; then
+    ok "the demo's port agrees with the plugin class, frame for frame ($(grep -m1 'frames,' /tmp/astest.demo-port.log | sed 's/^ *//'))"
+else
+    bad "the demo's port has drifted from the plugin -- see /tmp/astest.demo-port.log"
+fi
+
+#---------------------------------------------------------------------------
 head_ "result"
 printf '  %d passed, %d failed, %d skipped\n\n' "$PASS" "$FAIL" "$SKIP"
 [ "$FAIL" -eq 0 ]

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Astronaught — browser demo | Stoatworks Labs</title>
+    <meta name="description" content="Try the Astronaught FFGL effect for Resolume in your browser: a model of the Roland RE-201 Space Echo with your picture as the signal on the tape, three playback heads at 1 : 2 : 3, a twelve-position Mode Selector and a spring tank. The plugin's own four GLSL passes, ported to WebGL2 unedited, recording onto its own 96-pass tape and driven by a JavaScript port of its CPU half that a check in its repository holds to the plugin's C++. A demo, not the plugin." />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./vendor/kit.css" />
+    <link rel="canonical" href="https://astronaught-demo.stoatworks-labs.com/" />
+  </head>
+  <body>
+    <main id="demo">
+      <noscript>
+        <p>
+          This demo runs the plugin's shaders and a port of its CPU half in your
+          browser, so it needs JavaScript and WebGL2. The plugin itself, its
+          source and its downloads are on
+          <a href="https://github.com/stoatworks-labs/astronaught">its repository</a>.
+        </p>
+      </noscript>
+    </main>
+
+    <script type="module" src="./plugin.js"></script>
+    <script
+      src="./vendor/support-footer.js"
+      defer
+      data-app="Astronaught"
+      data-repo="https://github.com/stoatworks-labs/astronaught"
+      data-note="A browser demo of the plugin's shaders over a port of its CPU half. Nothing you load here leaves your machine."
+    ></script>
+  </body>
+</html>
