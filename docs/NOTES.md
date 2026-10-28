@@ -301,7 +301,8 @@ what its flags are.
 - **No NVIDIA or AMD driver has run it.** Two GLSL compilers, no discrete-GPU
   driver. Nothing has been used on a show.
 - **No video yet**, so there is no embed block in the README or `projects.json`.
-- **No browser demo, no plugin-bench expectation.**
+- **No plugin-bench expectation.** (The browser demo came on 2026-10-28; AGENTS.md
+  has how it was built and checked.)
 - **No OpenFX target**, and structurally not "not yet": an OFX host wants an
   arbitrary frame in arbitrary order, and what is on a tape at frame 900 depends
   on frames 1-899 including everything Intensity fed back. Afterglow escapes this

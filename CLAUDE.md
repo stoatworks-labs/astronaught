@@ -18,7 +18,7 @@ Read `AGENTS.md` before changing the tape, the heads or the loop.
 - Set anything by its host-facing name: `--set "Repeat Rate=0.35" --set "Mode=10"`
 
 ## Verify
-- **Everything (21 checks, clean universal build): `tools/verify.sh`**
+- **Everything (23 checks, clean universal build): `tools/verify.sh`**
 - The whole machine: `./build/astest --all`
 - The Mode Selector against Roland's table: `./build/astest --modes`
 - The heads are at 1 : 2 : 3: `./build/astest --ratios`
@@ -31,6 +31,8 @@ Read `AGENTS.md` before changing the tape, the heads or the loop.
 - Every preset renders structure: `./build/astest --presets`
 - A hostile machine leaves no NaN: `./build/astest --guard`
 - No dead controls: `python3 tools/sweep.py`
+- The demo's shaders are the plugin's: `python3 demo/tools/check_shaders.py`
+- The demo's port against the plugin class: `demo/tools/crosscheck/crosscheck.sh`
 
 ## Notes
 - ☠️ **The tape is indexed by POSITION, never by time.** Every recognisable
@@ -79,13 +81,34 @@ Read `AGENTS.md` before changing the tape, the heads or the loop.
   reserved words. Shader errors surface only at runtime, in the diag log.
 - Public repo. "Commit" = commit **and** push.
 
+## Browser demo
+- `demo/` is the page at https://astronaught-demo.stoatworks-labs.com (Cloudflare Worker
+  `astronaught-demo`, a ROUTE on a proxied AAAA 100:: record -- the zone's custom domains
+  are full; deleting the record takes the page dark with a green deploy). `deploy.yml`
+  redeploys it on a push to main; by hand: `cf-run npx wrangler deploy`.
+- `demo/shaders.js` is GENERATED: after changing `source/shaders/*.cpp` run
+  `python3 demo/tools/check_shaders.py --write`; verify.sh fails on drift, on a new
+  `...Fragment()` the check does not list, and on a change to how the pieces are joined.
+- `demo/port.js` is the CPU half by hand (Controls, Heads, Transport, Tape, Spring,
+  Presets, Store's sizing, ProcessOpenGL's bookkeeping, SetFloatParameter). Change it
+  with the C++: `demo/tools/crosscheck/crosscheck.sh` (verify.sh runs it; needs node, the
+  submodule and a GL context, ~40 s) drives the real class and the port through 3,010
+  frames and fails on any integer, parameter or uniform that differs. A new uniform is a
+  new key in the pass's object in `AstronaughtFrames.frame()`.
+- The C++ is built twice there: `-ffp-contract=off` (bit-identical bar libm's last bits)
+  and native (arm64 fuses multiply-adds JavaScript can't). Floats get 1e-5 relative.
+- `demo/vendor/` is the shared kit: never edit it, re-vendor from the backend's
+  `resolume-demo/kit` on origin/main.
+- The tape is the plugin's: 96 RGBA8 layers at Store.cpp's 384 MB budget. A browser that
+  refuses it gets half, then half again, and the line under the picture says so.
+
 ## Not done yet
 
 - **No NVIDIA or AMD driver has run it.** Verified on Apple's GLSL compiler and
   on Mesa llvmpipe (win-lab, no GPU) — two compilers, no discrete-GPU driver.
 - **Never used on a show.** The macOS artefacts are Developer ID-signed and
   notarised, and have been since v0.1.0.
-- **No browser demo, no plugin-bench expectation.**
+- **No plugin-bench expectation.**
 - **No OpenFX target, and not "not yet".** A tape loop cannot answer an OFX
   host's request for an arbitrary frame in arbitrary order. Reasoning is in
   `CMakeLists.txt`.

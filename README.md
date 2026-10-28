@@ -24,6 +24,8 @@ An FFGL effect for **Resolume Arena and Avenue**.
 
 **Video:** [What it does, in 50 seconds](https://www.youtube.com/watch?v=gKclEJn55sk)
 
+**Browser demo:** [astronaught-demo.stoatworks-labs.com](https://astronaught-demo.stoatworks-labs.com/), the plugin's own shaders in WebGL2. It's a demo, not the plugin; [Browser demo](#browser-demo) says what that means.
+
 ![Three heads, on real footage](docs/hero.png)
 
 *Selector position 11 (all three heads and the spring tank) on a clip of
@@ -161,7 +163,7 @@ picture has no negative half, so anything that sums accumulates, every time.
 
 ## Status
 
-`tools/verify.sh` runs 21 checks against a clean universal build, driving the
+`tools/verify.sh` runs 23 checks against a clean universal build, driving the
 real plugin class through the real FFGL sequence in a headless OpenGL 4.1 core
 context.
 
@@ -178,6 +180,7 @@ context.
 | `--presets` | all ten factory presets render structure, judged on the standard deviation of luma with dark, flat and blown-out rejected separately |
 | `--guard` | four hostile machines, including the loop past unity, leave 0 non-finite samples |
 | `tools/sweep.py` | all 22 controls reach the picture |
+| `demo/tools/` | the browser demo runs the plugin's shaders character for character, and its port of the CPU half agrees with the plugin class over 3,010 frames |
 
 Plus the release checks, run locally where they're cheap: the bundle is
 universal by `lipo`, exports `_plugMain`, keeps its `CFFGLPluginInfo` through the
@@ -261,6 +264,28 @@ Reaching further back than 96 passes means recording less often, which is a
 memory cap and is also, conveniently, the right physics: a tape running slowly
 does carry less signal per second. The number 96 comes from a byte budget rather
 than a Roland spec sheet.
+
+## Browser demo
+
+**<https://astronaught-demo.stoatworks-labs.com/>** puts every control in front of you,
+with its own name, group and default, on generated clips or a file of your own. The four
+passes are the plugin's own GLSL, spliced unedited into `demo/shaders.js`
+(`demo/tools/check_shaders.py`, run by `tools/verify.sh`, fails on a changed character).
+They record onto the plugin's own tape: 96 passes of the record head in one texture
+array, at Store.cpp's byte budget, so 1080p costs a web page 384 MB of GPU memory, and
+a browser that won't give it that gets a smaller tape and is told so.
+
+The CPU half (the transport, the slot table, the controls, the presets) is a JavaScript
+port, and `demo/tools/crosscheck/` holds it to the **real plugin class** in a GL context:
+3,010 frames, every uniform read back out of its four programs. Every integer and
+parameter is identical, and against the plugin built without fused multiply-adds (its
+Intel slice's arithmetic) 99.6% of the 898,803 values are bit-identical and the rest one
+unit in the last place of a float. Frames from the page and from `astest` at the same
+settings agree to within a level or two of 255, bar a few dropout blocks.
+
+It needs WebGL2 with `EXT_color_buffer_float`. The plugin has no audio input, so nothing's
+missing for want of one. It is a demo, not the plugin, and the page says what it doesn't
+reproduce.
 
 ## Build
 

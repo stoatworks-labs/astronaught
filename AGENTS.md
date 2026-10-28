@@ -176,3 +176,84 @@ The 4K figure deserves one caution: the store is capped at 1365×768 by its byte
 budget, so 4K is cheap *because the echoes are at a quarter of the composition's
 linear resolution*. That is defensible — see Store.h — but it is not the same
 statement as "it is fast at 4K".
+
+## The browser demo (2026-10-28)
+
+`demo/` is <https://astronaught-demo.stoatworks-labs.com>, built to the fleet's
+`resolume-demo` kit rules (`~/Projects/resolume/specs/DEMO-BRIEF.md`) in the demo sweep
+of 2026-10-28, on slipstream's shape. What a reader of it must know:
+
+- **The shaders are the plugin's**: kVertex, kTapeFunctions, kMediumFunctions, kPreamble
+  and the raw string each of Passes.cpp's four `...Fragment()` functions appends, spliced
+  by `demo/tools/check_shaders.py --write` into `demo/shaders.js` and compared character
+  for character. It also fails on a `...Fragment()` it does not list (ReadProbeFragment is
+  listed as not carried: it is astest's probe) and on a change to the JOIN on either side.
+  **All four programs compile and link in WebGL2 as spliced** (SwiftShader, headless
+  Chrome). The playback pass's two 96-float uniform arrays fit WebGL2's guaranteed 224
+  fragment vectors; SwiftShader offers 4,096.
+- **The tape is the plugin's tape**, not a frame queue: one `TEXTURE_2D_ARRAY` of 96
+  RGBA8 layers, written a layer at a time through `framebufferTextureLayer`, read per
+  fragment by the plugin's own `tapeRead` over a slot table the port keeps, sized by
+  Store.cpp's own arithmetic and 384 MB budget (1365 × 768 at 1080p, as in Arena). If the
+  browser refuses the allocation the page halves the budget until it is allowed and says
+  so under the picture (tested by making texStorage3D refuse: 960 × 540 came down to
+  683 × 384 on 96 MB, and the port's Store bookkeeping followed). A lost context is
+  reported too. The head bus and the tank are RGBA16F, so the page needs
+  `EXT_color_buffer_float` and stops and says so without it.
+- **The CPU half is a port, in `demo/port.js`** (no DOM, no GL, so node can run it):
+  Controls, Heads, Transport, Tape, Spring, Presets, Store's sizing, and ProcessOpenGL's
+  and SetFloatParameter's bookkeeping, written to RETURN each pass's uniforms. Math.fround
+  is applied wherever the C++ rounds to float -- the transport's hash takes the fractional
+  part of numbers in the thousands, where float and double disagree in the third digit.
+- **`demo/tools/crosscheck/` holds the port to the real class.** `uniforms.cpp` drives
+  `Astronaught` itself in a CGL context through `scenario.mjs`'s 3,010 frames and reads
+  every active uniform of its four programs back with glGetUniform after each frame, with
+  the tape position, stride and slot table through the accessors astest already uses, and
+  every GetFloatParameter. `frames.mjs` runs port.js through the same. The scenario: every
+  Mode position; Repeat Rate swept with echoes on the tape; Head Spread both ways; the tank,
+  medium and transport at extremes; a fresh instance whose first instruction is a preset
+  (seedHostSent); presets through a host that restates everything every frame, one that
+  restates controls but says Preset only when it changes, and one that consumes value
+  events (the page's); 30, 60, 144 and 10 fps; a stalled frame and a clock jump back;
+  320 × 180, 640 × 360 and 1920 × 1080; and a fast tape run that rebases the slot table
+  several times. **Every integer and parameter identical; built `-ffp-contract=off`,
+  99.57% of 898,803 values bit-identical and the worst one float ulp (1.1e-7); native
+  arm64, 79.6% and 4.7e-6.** The tolerance is 1e-5 relative.
+- **Mutants**, one token each in port.js, all twelve caught by the final scenario
+  (2026-10-28): the scrape weight, the stride's two slots of headroom, the head at the end
+  of the sweep instead of the start, the rebase threshold, a preset row, a Mode table cell,
+  the tank's -60 dB, the preset's echo rule, its restatement rule, its 1e-3 tolerance, the
+  drop's event, and hostSent not seeded. With only the host that restates Preset every
+  frame, the echo rule, the restatement rule and the seed all went UNCAUGHT: that host
+  re-applies the preset over anything that dropped it in the same frame, so a broken rule
+  changes nothing it can see. Hence the other two hosts and the fresh-instance opening.
+- **The GL half only a reader checks** (the binding, the layer attach, the ping-pong), so
+  frames were compared with `astest --out` on its own test card (ported to JS
+  byte-for-byte), at 640 × 360 on the f/60 clock, the page's renderer in headless Chrome
+  on SwiftShader against the plugin on Apple's GL (M-series): Mix 0 identical to the byte;
+  the defaults (150 frames), a 600-frame slow tape with the tank, and seven presets at 240
+  frames all within two levels of 255 and all but 0.02% within one. Long Throw, Runaway and
+  Sick Transport, the three with Dropouts up, also differ in whole dropout blocks (0.06%,
+  0.65%, 0.39% of pixels), where `hash21` lands a block on the other side of `TapeDrop`.
+- **Decided without asking:** the page's panel is a host that CONSUMES the plugin's value
+  events (Resolume does not), so a preset moves the sliders and a drop to Custom moves the
+  dropdown -- and it reads them back mid-push, or the stale Preset later in the same push
+  would re-apply the preset over the edit. Paused, a redraw runs only the playback heads
+  and the output stage (readout's rule: no recording on a frame that did not happen).
+  The clock's unit vote is not ported; the page's clock is declared seconds, as astest's
+  is. Clips: `spot` (default), `scene`, `grid`, `detail`, `ramp`, `bars`, `alpha`. The
+  About block is not on the panel.
+- **Verified headlessly** (`--remote-debugging-pipe`, SwiftShader, console and Log
+  events collected): no console errors; Mode 4 → 11 and Repeat Rate 0.52 → 0.9 change the
+  picture; Dub Siren moves the knobs and holds, an Intensity edit drops it to Custom and
+  keeps the edit; paused, the tape position does not move while Echo Volume still redraws,
+  and Step advances it one frame; Defaults; `?embed=1&size=1280x720` renders with no
+  banner and the hidden statement; 390 px wide has no sideways scroll; 1920 × 1080
+  allocates the 384 MB tape.
+- **Live** needs the proxied AAAA 100:: record for `astronaught-demo` (the zone's custom
+  domains are full; `wrangler.toml` has a ROUTE), and `deploy.yml` needs the repo's
+  `CLOUDFLARE_API_TOKEN` secret and `CLOUDFLARE_ACCOUNT_ID` variable. The live page logs
+  one console error that is not the page's: the zone's injected challenge script, blocked
+  by `script-src 'self'`, as on every `*-demo` host.
+- `stoatworks-backend/resolume-demo/sync.sh` does not list astronaught yet: add it, or the
+  vendored kit here is one nothing checks.
