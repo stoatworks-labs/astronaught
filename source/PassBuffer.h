@@ -7,7 +7,7 @@ namespace astronaught
 /**
     An off-screen buffer for one stage of the chain.
 
-    Two things on top of the SDK's FFGLFBO.
+    Three things on top of the SDK's FFGLFBO.
 
     **It reallocates only when it has to.** `Ensure()` is called every frame and
     is a no-op in the overwhelming majority of them. Astronaught's buffers are sized
@@ -39,6 +39,12 @@ namespace astronaught
     fixed set of taps along one axis, and the warp reads at most one texel away
     from where it was told. A mip chain would be built every frame and read by
     nobody.
+
+    **It has no depth buffer.** `FFGLFBO::Initialise()` always attaches a
+    24-bit depth renderbuffer the size of the picture, and nothing here draws
+    with depth: at 4K that is about 32 MB a buffer for nothing. Ensure()
+    allocates through InitialiseColourOnly() instead, the same steps with the
+    colour texture alone.
 */
 class PassBuffer : public ffglex::FFGLFBO
 {
@@ -57,6 +63,12 @@ public:
 	{
 		return GetGLID() != 0;
 	}
+
+private:
+	/// FFGLFBO::Initialise() less the depth renderbuffer: the framebuffer, the
+	/// colour texture and its attachment, and everything released again if
+	/// the framebuffer is not complete.
+	bool InitialiseColourOnly( GLsizei requestedWidth, GLsizei requestedHeight, GLint format );
 };
 
 } // namespace astronaught
