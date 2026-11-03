@@ -26,6 +26,8 @@ An FFGL effect for **Resolume Arena and Avenue**.
 
 **Browser demo:** [astronaught-demo.stoatworks-labs.com](https://astronaught-demo.stoatworks-labs.com/), the plugin's own shaders in WebGL2. It's a demo, not the plugin; [Browser demo](#browser-demo) says what that means.
 
+The [project page](https://stoatworks-labs.com/software/astronaught/) has the downloads, the [user guide](https://stoatworks-labs.com/software/astronaught/guide/) and the video.
+
 ![Three heads, on real footage](docs/hero.png)
 
 *Selector position 11 (all three heads and the spring tank) on a clip of
